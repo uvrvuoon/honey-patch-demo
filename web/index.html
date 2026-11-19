@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>허니패치 비교 데모</title>
+<style>
+  :root {
+    --bg: #E8ECF0;
+    --surface: #FFFFFF;
+    --ink: #18212C;
+    --muted: #5A6573;
+    --line: #CBD3DC;
+    --leak: #B42318;      --leak-bg: #FDECEA;
+    --block: #2F5D8A;     --block-bg: #E7EFF8;
+    --fake: #2E7D4F;      --fake-bg: #E6F4EC;
+    --honey: #A86A0C;     --honey-bg: #FBF1DE;
+    --neutral-bg: #EEF1F4;
+    --sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+    --mono: "D2Coding", "Consolas", "SF Mono", "Menlo", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #12171D; --surface: #1B222B; --ink: #E4E9EE; --muted: #97A3B0; --line: #2E3843;
+      --leak: #FF8A80;  --leak-bg: #3A1A18;
+      --block: #8DB5E2; --block-bg: #18283A;
+      --fake: #7FD3A0;  --fake-bg: #15301F;
+      --honey: #F0B54D; --honey-bg: #352711;
+      --neutral-bg: #222A33;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); }
+  button, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--honey); outline-offset: 2px; }
+
+  .page { max-width: 1440px; margin: 0 auto; padding: 24px 24px 48px; }
+
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+  h1 { font-size: 26px; line-height: 1.25; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 4px 0 0; max-width: 70ch; }
+  .lights { display: flex; gap: 14px; color: var(--muted); font-size: 13px; }
+  .light { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+  .dot.up { background: var(--fake); }
+  .dot.down { background: var(--leak); }
+
+  /* 요청 입력 */
+  .request { margin-top: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .url { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--neutral-bg); }
+  .url span { padding: 10px 0 10px 12px; color: var(--muted); font-family: var(--mono); white-space: nowrap; }
+  .url input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 10px 12px 10px 2px; font-family: var(--mono); }
+  .url input:focus { outline: none; }
+  .url:focus-within { outline: 3px solid var(--honey); outline-offset: 2px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-top: 12px; }
+  .who { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .who label { padding: 7px 12px; cursor: pointer; font-size: 14px; }
+  .who input { position: absolute; opacity: 0; pointer-events: none; }
+  .who label:has(input:checked) { background: var(--ink); color: var(--surface); }
+  .who label:has(input:focus-visible) { outline: 3px solid var(--honey); outline-offset: -3px; }
+  .ip { color: var(--muted); font-size: 13px; }
+  .send { margin-left: auto; padding: 8px 18px; border: 0; border-radius: 8px; background: var(--ink); color: var(--surface); font-weight: 600; cursor: pointer; }
+  .send:disabled { opacity: .5; cursor: wait; }
+  .cases { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+  .case { padding: 7px 12px; border: 1px solid var(--line); border-radius: 8px; background: transparent; cursor: pointer; text-align: left; }
+  .case b { display: block; font-size: 14px; }
+  .case small { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+  .case.attack { border-color: var(--leak); }
+  .case.attack b { color: var(--leak); }
+
+  /* 결과 + 감시 기록 */
+  .stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; margin-top: 20px; align-items: start; }
+  .servers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .server { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+  .server[data-id="3"] { border-color: var(--honey); box-shadow: 0 0 0 1px var(--honey); }
+  .server h2 { margin: 0; padding: 12px 14px 10px; font-size: 16px; display: flex; justify-content: space-between; gap: 8px; }
+  .server h2 small { color: var(--muted); font-weight: 400; font-size: 13px; }
+  .server .what { margin: 0 14px; color: var(--muted); font-size: 13px; }
+
+  .seen { margin: 10px 14px 0; flex: 1; display: flex; flex-direction: column; }
+  .seen .meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+  .code { font-family: var(--mono); font-weight: 700; color: var(--ink); }
+  pre { margin: 6px 0 0; padding: 10px; min-height: 150px; max-height: 260px; overflow: auto; background: var(--neutral-bg);
+        border-radius: 6px; font: 12.5px/1.5 var(--mono); white-space: pre-wrap; word-break: break-all; }
+  pre.empty { color: var(--muted); font-family: var(--sans); font-size: 13px; }
+
+  .truth { margin-top: 12px; padding: 12px 14px 14px; border-top: 1px solid var(--line); background: var(--neutral-bg); }
+  .truth .label { font-size: 12px; color: var(--muted); }
+  .verdict { font-size: 19px; font-weight: 700; line-height: 1.3; margin-top: 2px; }
+  .facts { margin: 6px 0 0; padding: 0; list-style: none; font-size: 13px; }
+  .facts li { display: flex; justify-content: space-between; gap: 8px; border-top: 1px dotted var(--line); padding: 3px 0; }
+  .facts li span:last-child { font-weight: 600; text-align: right; }
+  .truth.leak    { background: var(--leak-bg); }  .truth.leak .verdict { color: var(--leak); }
+  .truth.blocked { background: var(--block-bg); } .truth.blocked .verdict { color: var(--block); }
+  .truth.fake    { background: var(--fake-bg); }  .truth.fake .verdict { color: var(--fake); }
+  .truth.down .verdict, .truth.unknown .verdict { color: var(--muted); }
+
+  .flash { animation: flash .5s ease-out; }
+  @keyframes flash { from { background: var(--honey-bg); } }
+  @media (prefers-reduced-motion: reduce) { .flash { animation: none; } }
+
+  aside { background: var(--surface); border: 1px solid var(--honey); border-radius: 10px; display: flex; flex-direction: column; max-height: 640px; position: sticky; top: 16px; }
+  aside h2 { margin: 0; padding: 12px 14px 4px; font-size: 16px; }
+  aside p { margin: 0 14px 8px; color: var(--muted); font-size: 13px; }
+  #log { list-style: none; margin: 0; padding: 0 14px 14px; overflow: auto; flex: 1; }
+  #log li { border-top: 1px solid var(--line); padding: 8px 0; font-size: 13px; }
+  #log li.new { animation: flash 1.2s ease-out; }
+  #log .t { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+  #log .p { font-family: var(--mono); word-break: break-all; }
+  #log .empty { color: var(--muted); border: 0; }
+
+  /* 요청 기록 */
+  .history { margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .history h2 { font-size: 16px; margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; }
+  .history h2 button { font-size: 13px; font-weight: 400; background: none; border: 0; color: var(--muted); cursor: pointer; text-decoration: underline; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 10px; border-top: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 500; border-top: 0; }
+  td.f { font-family: var(--mono); }
+  td .leak { color: var(--leak); font-weight: 600; } td .blocked { color: var(--block); font-weight: 600; } td .fake { color: var(--fake); font-weight: 600; }
+
+  @media (max-width: 1100px) { .stage { grid-template-columns: 1fr; } aside { position: static; max-height: 360px; } }
+  @media (max-width: 760px) { .servers { grid-template-columns: 1fr; } .send { margin-left: 0; } .page { padding: 16px; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div>
+      <h1>같은 공격, 세 가지 서버</h1>
+      <p class="sub">파일 다운로드 주소를 조작하는 경로 탐색 공격을 무방비·일반 패치·허니패치 서버에 똑같이 보내고 반응을 비교합니다.</p>
+    </div>
+    <div class="lights" id="lights" aria-label="서버 실행 상태"></div>
+  </header>
+
+  <section class="request" aria-label="요청 보내기">
+    <div class="url">
+      <span>/download?file=</span>
+      <input id="file" value="report.txt" aria-label="요청할 파일 이름" spellcheck="false" autocomplete="off">
+    </div>
+    <div class="row">
+      <div class="who" role="radiogroup" aria-label="보내는 사람">
+        <label><input type="radio" name="who" value="user" checked>정상 사용자</label>
+        <label><input type="radio" name="who" value="attacker">공격자</label>
+      </div>
+      <span class="ip" id="ip"></span>
+      <button class="send" id="send">세 서버에 보내기</button>
+    </div>
+    <div class="cases" aria-label="검증 사례로 바로 보내기">
+      <button class="case" data-file="report.txt" data-who="user"><b>정상 요청</b><small>report.txt</small></button>
+      <button class="case attack" data-file="../secret/passwords.txt" data-who="attacker"><b>공격 요청</b><small>../secret/passwords.txt</small></button>
+      <button class="case" data-file="..report.txt" data-who="user"><b>경계 사례</b><small>..report.txt</small></button>
+    </div>
+  </section>
+
+  <div class="stage">
+    <section class="servers" id="servers" aria-live="polite"></section>
+    <aside aria-label="미끼 방 감시 기록">
+      <h2>미끼 방 감시 기록</h2>
+      <p id="logpath">서버 ③의 공격 로그를 실시간으로 보여 줍니다.</p>
+      <ol id="log"><li class="empty">아직 기록이 없습니다. 공격 요청을 보내 보세요.</li></ol>
+    </aside>
+  </div>
+
+  <section class="history">
+    <h2>요청 기록 <button id="clear">지우기</button></h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>시각</th><th>보낸 사람</th><th>file</th><th>① 무방비</th><th>② 일반 패치</th><th>③ 허니패치</th><th>③ 미끼 전환</th></tr></thead>
+        <tbody id="rows"><tr><td colspan="7" style="color:var(--muted)">요청을 보내면 결과가 여기에 쌓입니다. 발표 자료용 화면 캡처에 쓰세요.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+const SERVERS = [
+  { id: 1, name: "① 무방비 서버", what: "경로 검사 없음" },
+  { id: 2, name: "② 일반 패치 서버", what: "허용 폴더 밖이면 오류로 거절" },
+  { id: 3, name: "③ 허니패치 서버", what: "공격이면 미끼 방으로 보내 가짜 파일을 줌" },
+];
+const IPS = { user: "10.0.0.10", attacker: "10.0.0.66" };
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const who = () => document.querySelector('input[name="who"]:checked').value;
+
+// 빈 칸 그리기
+$("#servers").innerHTML = SERVERS.map((s) => `
+  <article class="server" data-id="${s.id}">
+    <h2>${s.name} <small id="port${s.id}"></small></h2>
+    <p class="what">${s.what}</p>
+    <div class="seen">
+      <div class="meta"><span>공격자·사용자가 받은 응답</span><span id="meta${s.id}"></span></div>
+      <pre id="body${s.id}" class="empty">아직 보낸 요청이 없습니다.</pre>
+    </div>
+    <div class="truth" id="truth${s.id}">
+      <div class="label">방어자만 아는 사실</div>
+      <div class="verdict" id="verdict${s.id}">–</div>
+      <ul class="facts" id="facts${s.id}"></ul>
+    </div>
+  </article>`).join("");
+
+function showIp() { $("#ip").textContent = "보내는 IP " + IPS[who()]; }
+document.querySelectorAll('input[name="who"]').forEach((r) => r.addEventListener("change", showIp));
+showIp();
+
+async function send() {
+  const file = $("#file").value;
+  if (!file) { $("#file").focus(); return; }
+  const btn = $("#send");
+  btn.disabled = true; btn.textContent = "보내는 중…";
+  try {
+    const res = await fetch(`/api/compare?file=${encodeURIComponent(file)}&as=${who()}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.status);
+    data.results.forEach(render);
+    addRow(data);
+  } catch (e) {
+    alert("비교 서버(web/app.py)에 연결하지 못했습니다. 터미널에서 python web/app.py 가 실행 중인지 확인하세요.\n" + e);
+  } finally {
+    btn.disabled = false; btn.textContent = "세 서버에 보내기";
+    pollLog();
+  }
+}
+
+function render(r) {
+  $("#port" + r.id).textContent = ":" + r.port;
+  $("#meta" + r.id).innerHTML = r.status === null ? "응답 없음"
+    : `<span class="code">${r.status}</span>, ${r.ms} ms`;
+  const pre = $("#body" + r.id);
+  if (r.status === null) {
+    pre.className = "empty";
+    pre.textContent = `포트 ${r.port}에서 응답이 없습니다. ` +
+      (r.id === 3 ? "서버 ③(servers/honeypatch_server.py)이 실행 중인지 확인하세요." : "서버를 먼저 실행하세요.");
+  } else {
+    pre.className = "";
+    pre.textContent = r.body + (r.truncated ? "\n… (일부만 표시)" : "");
+  }
+  const truth = $("#truth" + r.id);
+  truth.className = "truth " + r.verdict;
+  void truth.offsetWidth; truth.classList.add("flash");
+  $("#verdict" + r.id).textContent = r.label;
+
+  const facts = [
+    ["진짜 비밀번호 포함", r.status === null ? "–" : r.secret_hits + "개"],
+    ["내용 출처", r.matched ? "data/" + r.matched : "–"],
+  ];
+  facts.push(["미끼로 이동", r.decoy === null ? "해당 없음" : r.decoy ? "예" : "아니요"]);
+  $("#facts" + r.id).innerHTML = facts.map(([k, v]) => `<li><span>${esc(k)}</span><span>${esc(v)}</span></li>`).join("");
+}
+
+let rowCount = 0;
+function addRow(d) {
+  const cell = (r) => r.status === null ? "꺼짐"
+    : `${r.status} <span class="${r.verdict}">${esc(r.label.replace(/ \(\d+\)$/, ""))}</span> ${r.ms}ms`;
+  const r3 = d.results[2];
+  if (rowCount++ === 0) $("#rows").innerHTML = "";
+  $("#rows").insertAdjacentHTML("afterbegin", `<tr>
+    <td>${d.time}</td><td>${d.as === "attacker" ? "공격자" : "정상 사용자"}</td><td class="f">${esc(d.file)}</td>
+    <td>${cell(d.results[0])}</td><td>${cell(d.results[1])}</td><td>${cell(r3)}</td>
+    <td>${r3.decoy === null || r3.status === null ? "–" : r3.decoy ? "예" : "아니요"}</td></tr>`);
+}
+$("#clear").addEventListener("click", () => {
+  rowCount = 0;
+  $("#rows").innerHTML = '<tr><td colspan="7" style="color:var(--muted)">기록을 지웠습니다.</td></tr>';
+});
+
+$("#send").addEventListener("click", send);
+$("#file").addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+document.querySelectorAll(".case").forEach((b) => b.addEventListener("click", () => {
+  $("#file").value = b.dataset.file;
+  document.querySelector(`input[name="who"][value="${b.dataset.who}"]`).checked = true;
+  showIp();
+  send();
+}));
+
+// 서버 실행 상태
+async function pollStatus() {
+  try {
+    const d = await (await fetch("/api/status")).json();
+    $("#lights").innerHTML = d.servers.map((s) =>
+      `<span class="light"><span class="dot ${s.up ? "up" : "down"}"></span>${"①②③"[s.id - 1]} ${s.up ? "켜짐" : "꺼짐"}</span>`).join("");
+  } catch { $("#lights").textContent = "비교 서버 연결 끊김"; }
+}
+
+// 미끼 방 감시 기록 (서버 ③ 로그 파일을 이어서 읽음)
+let logOffset = 0, logStarted = false;
+function pick(o, keys) { for (const k of keys) if (o[k] !== undefined && o[k] !== "") return o[k]; }
+function logItem(e) {
+  if (e.raw !== undefined) return `<span class="p">${esc(e.raw)}</span>`;
+  const o = e.json;
+  const t = pick(o, ["time", "timestamp", "ts", "시간"]);
+  const ip = pick(o, ["ip", "client_ip", "remote", "IP"]);
+  const path = pick(o, ["path", "file", "request", "url", "요청 경로", "요청"]);
+  const ev = pick(o, ["event", "action", "type", "행동"]);
+  if (t === undefined && ip === undefined && path === undefined) return `<span class="p">${esc(JSON.stringify(o))}</span>`;
+  return `<div class="t">${esc(t ?? "")} ${ip ? "· " + esc(ip) : ""}</div>` +
+         (ev ? `<div>${esc(ev)}</div>` : "") + (path ? `<div class="p">${esc(path)}</div>` : "");
+}
+async function pollLog() {
+  try {
+    const d = await (await fetch(`/api/decoy-log?offset=${logOffset}`)).json();
+    if (!d.exists) { $("#logpath").textContent = `로그 파일(${d.path})이 아직 없습니다. 서버 ③이 공격을 기록하면 여기에 나타납니다.`; return; }
+    $("#logpath").textContent = `${d.path}를 실시간으로 보여 줍니다. 공격자가 미끼 방 안에서 한 행동입니다.`;
+    if (d.offset < logOffset) { $("#log").innerHTML = ""; logStarted = false; }
+    logOffset = d.offset;
+    if (!d.entries.length) return;
+    if (!logStarted) { $("#log").innerHTML = ""; logStarted = true; }
+    for (const e of d.entries) $("#log").insertAdjacentHTML("afterbegin", `<li class="new">${logItem(e)}</li>`);
+  } catch { /* 다음 주기에 다시 시도 */ }
+}
+pollStatus(); pollLog();
+setInterval(pollStatus, 3000);
+setInterval(pollLog, 1000);
+</script>
+</body>
+</html>
