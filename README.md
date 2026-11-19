@@ -9,7 +9,7 @@
 |---|---|---|---|
 | ① 무방비 | `servers/vulnerable_server.py` | 8001 | 윤아란 |
 | ② 일반 패치 | `servers/patched_server.py` | 8002 | 윤아란 |
-| ③ 허니패치 | `servers/honeypatch_server.py` | 8003 (예정) | 안지민 |
+| ③ 허니패치 | `servers/honeypatch_server.py` | 8003 | 안지민 |
 
 ## 폴더 구조
 
@@ -39,6 +39,7 @@ honey-patch-demo/
 pip install -r requirements.txt   # 서버 ①②는 표준 라이브러리만 사용 (설치 없이 실행 가능)
 python servers/vulnerable_server.py      # ① → http://127.0.0.1:8001
 python servers/patched_server.py         # ② → http://127.0.0.1:8002
+python servers/honeypatch_server.py      # ③ → http://127.0.0.1:8003
 ```
 
 ## 서버 ①② (윤아란)
@@ -70,7 +71,27 @@ python servers/patched_server.py         # ② → http://127.0.0.1:8002
 
 ## 서버 ③ (안지민)
 
-<!-- 미끼 전환 방식, 공격 로그 형식 -->
+- **판정**: 서버 ②와 같은 `check_path()`로 실제 경로가 `data/public` 안인지 판단
+- **public 안**: 실제 파일을 200으로 응답
+- **public 밖(공격)**: 403 대신 `data/decoy/` 아래 **같은 상대 위치**의 가짜 파일을 200으로 응답
+  (예: `data/secret/passwords.txt` → `data/decoy/secret/passwords.txt`). 가짜 파일이 없으면 404
+- **공격자 기억(sticky)**: 한 번 공격한 IP는 기억해 두고, 이후 요청도 같은 위치에 가짜 파일이 있으면 그것을 응답
+- **IP 판단**: `X-Forwarded-For` 헤더의 첫 값 우선, 없으면 실제 접속 주소
+- **가짜 파일**: Faker로 생성(`seed 2026`), `SECRET_MARKER` 없음
+
+| 입력 | ③ 응답 |
+|---|---|
+| `report.txt` (정상) | 200, 실제 파일 |
+| `../secret/passwords.txt` (위반) | 200, 가짜 계정 목록 |
+| `..report.txt` (경계) | 200, 실제 파일 |
+
+공격 로그 `logs/honeypatch.log` (한 줄에 JSON 하나):
+
+    {"time": "2026-11-19 18:42:37", "ip": "10.0.0.66", "path": "../secret/passwords.txt", "event": "attack"}
+    {"time": "2026-11-19 18:42:44", "ip": "10.0.0.66", "path": "report.txt", "event": "sticky"}
+
+- `attack`: public 밖 요청 감지 → 가짜 파일 응답
+- `sticky`: 기억된 공격자 IP의 이후 요청
 
 ## 원논문과의 차이
 
