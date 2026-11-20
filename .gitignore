@@ -6,3 +6,6 @@ venv/
 .idea/
 .DS_Store
 Thumbs.db
+
+# 서버 ③ 실행 시 생기는 공격 로그
+logs/*.log
