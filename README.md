@@ -1,6 +1,6 @@
-# Honey-Patch 축소 구현 — 경로 이탈(Path Traversal) 다운로드 서버 3종 비교
+# Honey-Patch — 경로 이탈(Path Traversal) 다운로드 서버 3종 비교
 
-같은 해킹 시도를 서버 3개에 동시에 보내고, 각 서버의 반응을 웹 화면 하나에서 나란히 비교하는 데모.
+같은 해킹 시도를 서버 3개에 동시에 보내고, 각 서버의 반응을 웹 화면 하나에서 나란히 비교하는 데모입니다.
 
 - 대상 논문: *From Patches to Honey-Patches: Lightweight Attacker Misdirection, Deception, and Disinformation* (ACM CCS 2014)
 - 공격: 다운로드 주소의 `file=` 값을 `../secret/passwords.txt`로 바꿔 비밀 폴더의 파일을 받아 가는 경로 이탈 공격
