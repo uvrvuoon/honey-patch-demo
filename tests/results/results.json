@@ -1,0 +1,210 @@
+{
+  "time": "2026-11-21 18:20:42",
+  "failed": 0,
+  "total": 9,
+  "cases": [
+    {
+      "kind": "정상",
+      "file": "report.txt",
+      "who": "user",
+      "ip": "10.0.0.10",
+      "point": "보호를 적용해도 정상 사용자가 그대로 파일을 받는지 (②③ 오탐 없음)",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "port": 64726,
+          "status": 200,
+          "ms": 14.6,
+          "verdict": "public",
+          "label": "공개 파일",
+          "matched": "public/report.txt",
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "port": 64729,
+          "status": 200,
+          "ms": 10.8,
+          "verdict": "public",
+          "label": "공개 파일",
+          "matched": "public/report.txt",
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "port": 64732,
+          "status": 200,
+          "ms": 12.9,
+          "verdict": "public",
+          "label": "공개 파일",
+          "matched": "public/report.txt",
+          "secret_hits": 0,
+          "decoy": false,
+          "pass": true,
+          "diffs": []
+        }
+      ]
+    },
+    {
+      "kind": "위반",
+      "file": "../secret/passwords.txt",
+      "who": "attacker",
+      "ip": "10.0.0.66",
+      "point": "①의 진짜 비밀 유출이 ②에서는 차단, ③에서는 가짜 파일로 바뀌는지",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "port": 64726,
+          "status": 200,
+          "ms": 14.3,
+          "verdict": "leak",
+          "label": "진짜 비밀 유출",
+          "matched": "secret/passwords.txt",
+          "secret_hits": 3,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "port": 64729,
+          "status": 403,
+          "ms": 12.4,
+          "verdict": "blocked",
+          "label": "차단(403)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "port": 64732,
+          "status": 200,
+          "ms": 15.6,
+          "verdict": "fake",
+          "label": "가짜 파일(미끼)",
+          "matched": "decoy/secret/passwords.txt",
+          "secret_hits": 0,
+          "decoy": true,
+          "pass": true,
+          "diffs": []
+        }
+      ]
+    },
+    {
+      "kind": "경계",
+      "file": "..report.txt",
+      "who": "user",
+      "ip": "10.0.0.10",
+      "point": "이름에 '..'이 있어도 실제 경로가 public 안이면 정상 처리하는지",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "port": 64726,
+          "status": 200,
+          "ms": 2.8,
+          "verdict": "public",
+          "label": "공개 파일",
+          "matched": "public/..report.txt",
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "port": 64729,
+          "status": 200,
+          "ms": 17.5,
+          "verdict": "public",
+          "label": "공개 파일",
+          "matched": "public/..report.txt",
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "port": 64732,
+          "status": 200,
+          "ms": 11.6,
+          "verdict": "public",
+          "label": "공개 파일",
+          "matched": "public/..report.txt",
+          "secret_hits": 0,
+          "decoy": false,
+          "pass": true,
+          "diffs": []
+        }
+      ]
+    }
+  ],
+  "timing": [
+    {
+      "id": 1,
+      "mark": "①",
+      "name": "무방비",
+      "n": 50,
+      "avg_ms": 9.83,
+      "median_ms": 11.9,
+      "min_ms": 1.4,
+      "max_ms": 24.6,
+      "responses": [
+        "200/leak"
+      ]
+    },
+    {
+      "id": 2,
+      "mark": "②",
+      "name": "일반 패치",
+      "n": 50,
+      "avg_ms": 8.09,
+      "median_ms": 10.7,
+      "min_ms": 1.2,
+      "max_ms": 22.9,
+      "responses": [
+        "403/blocked"
+      ]
+    },
+    {
+      "id": 3,
+      "mark": "③",
+      "name": "허니패치",
+      "n": 50,
+      "avg_ms": 7.39,
+      "median_ms": 3.45,
+      "min_ms": 2.6,
+      "max_ms": 23.2,
+      "responses": [
+        "200/fake"
+      ]
+    }
+  ]
+}
