@@ -9,3 +9,6 @@ Thumbs.db
 
 # 서버 ③ 실행 시 생기는 공격 로그
 logs/*.log
+
+# 14주차 실험용 가짜 파일 (tests/make_decoys.py가 생성, 실험 후 삭제)
+data/decoy/secret/gen_*.txt
