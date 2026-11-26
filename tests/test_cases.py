@@ -330,6 +330,13 @@ def timing_experiment(servers, repeat):
 
 
 # ---- 결과 저장 (보고서 근거용) ----------------------------------------------
+def write_lf(path, text):
+    """줄바꿈을 LF로 고정해 저장. Windows에서 그냥 쓰면 CRLF가 되어 git이 매번 변경으로 본다.
+    (Path.write_text(newline=...)는 Python 3.10 이상에서만 되므로 open()을 쓴다.)"""
+    with open(str(path), "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+
+
 def save_results(rows, failed, timing, path_md, path_json):
     path_md.parent.mkdir(parents=True, exist_ok=True)
     md = ["# 고정 검증 사례 3종 실행 결과 (서버 ①②③ 비교)", "",
@@ -367,12 +374,11 @@ def save_results(rows, failed, timing, path_md, path_json):
             md.append("| %s %s | %d | %s | %s | %s | %s | %s |"
                       % (r["mark"], r["name"], r["n"], r["avg_ms"], r["median_ms"],
                          r["min_ms"], r["max_ms"], ", ".join(r["responses"])))
-    # newline="\n": Windows에서 쓰면 줄바꿈이 CRLF가 되어 git이 매번 변경으로 보므로 LF로 고정
-    path_md.write_text("\n".join(md) + "\n", encoding="utf-8", newline="\n")
-    path_json.write_text(json.dumps(
+    write_lf(path_md, "\n".join(md) + "\n")
+    write_lf(path_json, json.dumps(
         {"time": time.strftime("%Y-%m-%d %H:%M:%S"), "failed": failed,
          "total": len(CASES) * 3, "cases": rows, "timing": timing},
-        ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+        ensure_ascii=False, indent=2) + "\n")
 
 
 # ---- 실행 ------------------------------------------------------------------

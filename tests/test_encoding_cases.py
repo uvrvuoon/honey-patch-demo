@@ -37,7 +37,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_cases import (  # noqa: E402
     CLIENT_IPS, DATA, DECOY_LOG, RESULT_DIR, ROOT, SERVERS, VERDICT_LABEL,
-    classify, free_port, pad, start_server,
+    classify, free_port, pad, start_server, write_lf,
 )
 
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
@@ -321,15 +321,14 @@ def save(rows, failed, md_path, json_path, fresh):
         md.append("없음. 위 입력들에서는 표기를 바꿔도 ①②③의 판정이 실행 전 기대와 같았다. "
                   "(시험한 입력과 근거는 위 표)")
 
-    md_path.write_text("\n".join(md) + "\n", encoding="utf-8", newline="\n")
-    json_path.write_text(json.dumps(
+    write_lf(md_path, "\n".join(md) + "\n")
+    write_lf(json_path, json.dumps(
         {"time": time.strftime("%Y-%m-%d %H:%M:%S"), "platform": sys.platform,
          "python": sys.version.split()[0], "commit": git_info(),
          "backslash_is_sep": BACKSLASH_IS_SEP, "case_insensitive": CASE_INSENSITIVE,
          "failed": failed, "total": total,
          "expect": {k: {str(i): v for i, v in d.items()} for k, d in EXPECT.items()},
-         "cases": rows}, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8", newline="\n")
+         "cases": rows}, ensure_ascii=False, indent=2) + "\n")
 
 
 def main():
