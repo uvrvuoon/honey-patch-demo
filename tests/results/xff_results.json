@@ -1,0 +1,395 @@
+{
+  "time": "2026-11-26 16:39:41",
+  "command": "python tests/test_xff_cases.py",
+  "scenarios": [
+    {
+      "id": "X1",
+      "group": "XFF 위조",
+      "title": "공격 후 XFF 값을 바꿔 미끼에서 빠져나가는지",
+      "steps": [
+        {
+          "desc": "공격자 공격",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "status": 200,
+          "verdict": "fake",
+          "secret_hits": 0,
+          "event": "attack",
+          "ip": "10.0.0.66",
+          "expect": {
+            "event": "attack",
+            "ip": "10.0.0.66",
+            "verdict": "fake"
+          },
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "desc": "같은 공격자가 XFF를 10.0.0.77로 바꿔 정상 요청",
+          "file": "report.txt",
+          "xff": "10.0.0.77",
+          "status": 200,
+          "verdict": "public",
+          "secret_hits": 0,
+          "event": null,
+          "ip": null,
+          "expect": {
+            "event": "sticky",
+            "ip": "10.0.0.66",
+            "verdict": "public"
+          },
+          "pass": false,
+          "diffs": [
+            "event 기대 sticky / 실제 None",
+            "기록 IP 기대 '10.0.0.66' / 실제 None"
+          ]
+        }
+      ],
+      "pass": false
+    },
+    {
+      "id": "X2",
+      "group": "XFF 위조",
+      "title": "공격 후 XFF 헤더를 빼면 미끼에서 빠져나가는지",
+      "steps": [
+        {
+          "desc": "공격자 공격",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "status": 200,
+          "verdict": "fake",
+          "secret_hits": 0,
+          "event": "attack",
+          "ip": "10.0.0.66",
+          "expect": {
+            "event": "attack",
+            "ip": "10.0.0.66",
+            "verdict": "fake"
+          },
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "desc": "같은 공격자가 헤더 없이 정상 요청",
+          "file": "report.txt",
+          "xff": null,
+          "status": 200,
+          "verdict": "public",
+          "secret_hits": 0,
+          "event": null,
+          "ip": null,
+          "expect": {
+            "event": "sticky",
+            "ip": "10.0.0.66",
+            "verdict": "public"
+          },
+          "pass": false,
+          "diffs": [
+            "event 기대 sticky / 실제 None",
+            "기록 IP 기대 '10.0.0.66' / 실제 None"
+          ]
+        }
+      ],
+      "pass": false
+    },
+    {
+      "id": "X3",
+      "group": "XFF 위조",
+      "title": "공격자가 정상 사용자 IP로 위조해 공격하면 정상 사용자가 오탐되는지",
+      "steps": [
+        {
+          "desc": "공격자가 XFF=10.0.0.10(정상 사용자 IP)으로 공격",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.10",
+          "status": 200,
+          "verdict": "fake",
+          "secret_hits": 0,
+          "event": "attack",
+          "ip": "10.0.0.10",
+          "expect": {
+            "event": "attack",
+            "ip": "10.0.0.10",
+            "verdict": "fake"
+          },
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "desc": "진짜 정상 사용자(10.0.0.10) 정상 요청",
+          "file": "report.txt",
+          "xff": "10.0.0.10",
+          "status": 200,
+          "verdict": "public",
+          "secret_hits": 0,
+          "event": "sticky",
+          "ip": "10.0.0.10",
+          "expect": {
+            "event": null,
+            "ip": null,
+            "verdict": "public"
+          },
+          "pass": false,
+          "diffs": [
+            "event 기대 None / 실제 sticky"
+          ]
+        }
+      ],
+      "pass": false
+    },
+    {
+      "id": "X4",
+      "group": "XFF 위조",
+      "title": "XFF 첫 값이 비어 있으면(',') 접속 주소로 판단하는지",
+      "steps": [
+        {
+          "desc": "XFF=',' 로 공격",
+          "file": "../secret/passwords.txt",
+          "xff": ",",
+          "status": 200,
+          "verdict": "fake",
+          "secret_hits": 0,
+          "event": "attack",
+          "ip": "127.0.0.1",
+          "expect": {
+            "event": "attack",
+            "ip": "127.0.0.1",
+            "verdict": "fake"
+          },
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "X5",
+      "group": "XFF 위조",
+      "title": "XFF 값 앞뒤 공백이 있어도 같은 공격자로 보는지",
+      "steps": [
+        {
+          "desc": "공격자 공격",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "status": 200,
+          "verdict": "fake",
+          "secret_hits": 0,
+          "event": "attack",
+          "ip": "10.0.0.66",
+          "expect": {
+            "event": "attack",
+            "ip": "10.0.0.66",
+            "verdict": "fake"
+          },
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "desc": "같은 공격자가 XFF=' 10.0.0.66 ' 로 정상 요청",
+          "file": "report.txt",
+          "xff": " 10.0.0.66 ",
+          "status": 200,
+          "verdict": "public",
+          "secret_hits": 0,
+          "event": "sticky",
+          "ip": "10.0.0.66",
+          "expect": {
+            "event": "sticky",
+            "ip": "10.0.0.66",
+            "verdict": "public"
+          },
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "S1",
+      "group": "같은 IP",
+      "title": "같은 IP(공유기 뒤 두 사람)에서 공격자 공격 후 정상 사용자가 오탐되는지",
+      "steps": [
+        {
+          "desc": "공격자(10.0.0.50) 공격",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.50",
+          "status": 200,
+          "verdict": "fake",
+          "secret_hits": 0,
+          "event": "attack",
+          "ip": "10.0.0.50",
+          "expect": {
+            "event": "attack",
+            "ip": "10.0.0.50",
+            "verdict": "fake"
+          },
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "desc": "같은 IP의 다른 정상 사용자 정상 요청",
+          "file": "report.txt",
+          "xff": "10.0.0.50",
+          "status": 200,
+          "verdict": "public",
+          "secret_hits": 0,
+          "event": "sticky",
+          "ip": "10.0.0.50",
+          "expect": {
+            "event": null,
+            "ip": null,
+            "verdict": "public"
+          },
+          "pass": false,
+          "diffs": [
+            "event 기대 None / 실제 sticky"
+          ]
+        }
+      ],
+      "pass": false
+    },
+    {
+      "id": "P1",
+      "group": "공격 직후",
+      "title": "공격 직후 같은 IP의 정상 요청 (명세: sticky)",
+      "steps": [
+        {
+          "desc": "공격자 공격",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "status": 200,
+          "verdict": "fake",
+          "secret_hits": 0,
+          "event": "attack",
+          "ip": "10.0.0.66",
+          "expect": {
+            "event": "attack",
+            "ip": "10.0.0.66",
+            "verdict": "fake"
+          },
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "desc": "공격 직후 같은 IP 정상 요청",
+          "file": "report.txt",
+          "xff": "10.0.0.66",
+          "status": 200,
+          "verdict": "public",
+          "secret_hits": 0,
+          "event": "sticky",
+          "ip": "10.0.0.66",
+          "expect": {
+            "event": "sticky",
+            "ip": "10.0.0.66",
+            "verdict": "public"
+          },
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "P2",
+      "group": "공격 직후",
+      "title": "공격 직후 같은 IP의 경계 사례 요청 (명세: sticky)",
+      "steps": [
+        {
+          "desc": "공격자 공격",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "status": 200,
+          "verdict": "fake",
+          "secret_hits": 0,
+          "event": "attack",
+          "ip": "10.0.0.66",
+          "expect": {
+            "event": "attack",
+            "ip": "10.0.0.66",
+            "verdict": "fake"
+          },
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "desc": "공격 직후 같은 IP ..report.txt 요청",
+          "file": "..report.txt",
+          "xff": "10.0.0.66",
+          "status": 200,
+          "verdict": "public",
+          "secret_hits": 0,
+          "event": "sticky",
+          "ip": "10.0.0.66",
+          "expect": {
+            "event": "sticky",
+            "ip": "10.0.0.66",
+            "verdict": "public"
+          },
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "P3",
+      "group": "공격 직후",
+      "title": "공격 직후 다른 IP의 정상 요청 (오탐 없음)",
+      "steps": [
+        {
+          "desc": "공격자 공격",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "status": 200,
+          "verdict": "fake",
+          "secret_hits": 0,
+          "event": "attack",
+          "ip": "10.0.0.66",
+          "expect": {
+            "event": "attack",
+            "ip": "10.0.0.66",
+            "verdict": "fake"
+          },
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "desc": "공격 직후 다른 IP(10.0.0.10) 정상 요청",
+          "file": "report.txt",
+          "xff": "10.0.0.10",
+          "status": 200,
+          "verdict": "public",
+          "secret_hits": 0,
+          "event": null,
+          "ip": null,
+          "expect": {
+            "event": null,
+            "ip": null,
+            "verdict": "public"
+          },
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "pass": true
+    }
+  ],
+  "concurrent": {
+    "S2": {
+      "user_sticky": 15,
+      "user_fake": 0,
+      "attack_not_fake": 0,
+      "secret_hits": 0,
+      "title": "같은 IP에서 공격·정상 요청 동시 전송",
+      "rounds": 30
+    },
+    "S3": {
+      "user_sticky": 0,
+      "user_fake": 0,
+      "attack_not_fake": 0,
+      "secret_hits": 0,
+      "title": "다른 IP에서 공격·정상 요청 동시 전송",
+      "rounds": 30
+    }
+  }
+}

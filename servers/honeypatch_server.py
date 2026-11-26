@@ -40,7 +40,9 @@ class HoneypatchHandler(DownloadHandler):
     def client_ip(self):
         xff = self.headers.get("X-Forwarded-For")
         if xff:
-            return xff.split(",")[0].strip()
+            first = xff.split(",")[0].strip()
+            if first:
+                return first
         return self.client_address[0]
 
     def resolve(self, name):
