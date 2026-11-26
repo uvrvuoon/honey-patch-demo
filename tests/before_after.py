@@ -58,8 +58,35 @@ BUGS = [
          {"status": 200, "verdict": "fake", "event": "attack", "ip": "127.0.0.1"},
          {"status": 200, "verdict": "public", "event": "sticky", "ip": "127.0.0.1"},
      ]},
-    # 김진하 13주차 반례가 저장소에 올라오고 수정되면 여기에 추가
+    {"id": "C1-②", "found_by": "이수빈 (코드 검토)", "before": "fd646a0",
+     "title": "공개 폴더 이름의 대소문자만 바꾼 정상 요청을 public 밖으로 판정 (macOS)",
+     "fix": "servers/patched_server.py check_path(): 문자열로 밖이면 상위 폴더가 public과 같은 폴더인지 samefile로 재확인",
+     "server": 2, "only_if": "case_insensitive",
+     "steps": [("공개 폴더 대소문자만 바꿔 요청", "../PUBLIC/report.txt", "10.0.0.10")],
+     "expect": [{"status": 200, "verdict": "public"}]},
+    {"id": "C1-③", "found_by": "이수빈 (코드 검토)", "before": "fd646a0",
+     "title": "같은 요청을 서버 ③이 공격으로 기록하고 그 사용자를 sticky로 기억 (macOS)",
+     "fix": "위와 같음 (서버 ③은 서버 ②의 check_path()를 사용)",
+     "server": 3, "only_if": "case_insensitive",
+     "steps": [("공개 폴더 대소문자만 바꿔 요청", "../PUBLIC/report.txt", "10.0.0.10"),
+               ("같은 사용자가 report.txt (오탐으로 기억됐는지)", "report.txt", "10.0.0.10")],
+     "expect": [{"status": 200, "verdict": "public", "event": None},
+                {"status": 200, "verdict": "public", "event": None}]},
 ]
+
+
+def case_insensitive():
+    """대소문자를 구분하지 않으면서 realpath가 대소문자를 맞춰 주지 않는 환경인지 (macOS 기본 APFS).
+    Windows는 realpath가 실제 대소문자로 바꿔 주므로 이 버그가 재현되지 않는다."""
+    with tempfile.TemporaryDirectory() as t:
+        real = os.path.join(t, "Ab")
+        os.mkdir(real)
+        alt = os.path.join(t, "aB")
+        return os.path.exists(alt) and os.path.realpath(alt) != os.path.realpath(real)
+
+
+CONDITIONS = {"case_insensitive": (case_insensitive,
+                                   "대소문자를 구분하지 않고 realpath가 대소문자를 맞추지 않는 환경(macOS)에서만 재현")}
 
 
 # ---- 코드 꺼내기 ------------------------------------------------------------
@@ -189,6 +216,12 @@ def main():
 
     report, all_ok = [], True
     for bug in bugs:
+        cond = bug.get("only_if")
+        if cond and not CONDITIONS[cond][0]():
+            print("[%s] %s\n   => 건너뜀: %s (이 PC: %s)\n" % (bug["id"], bug["title"], CONDITIONS[cond][1], sys.platform))
+            report.append({"id": bug["id"], "found_by": bug["found_by"], "title": bug["title"],
+                           "fix": bug["fix"], "skipped": CONDITIONS[cond][1]})
+            continue
         with tempfile.TemporaryDirectory() as t_before, tempfile.TemporaryDirectory() as t_after:
             extract_commit(bug["before"], t_before)
             copy_worktree(t_after)
@@ -243,6 +276,10 @@ def save(report, fixed_cases):
     if fixed_cases:
         md.append("- 고정 사례 3종 (수정 후 코드): %s" % fixed_cases)
     for r in report:
+        if r.get("skipped"):
+            md += ["", "## %s — %s (발견: %s)" % (r["id"], r["title"], r["found_by"]), "",
+                   "- 수정 내용: %s" % r["fix"], "- **건너뜀**: %s (실행 OS: %s)" % (r["skipped"], sys.platform)]
+            continue
         keys = list(r["steps"][0]["expect"])
         md += ["", "## %s — %s (발견: %s)" % (r["id"], r["title"], r["found_by"]), "",
                "- 수정 내용: %s" % r["fix"],

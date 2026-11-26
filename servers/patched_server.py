@@ -26,7 +26,28 @@ def check_path(name):
         inside = os.path.commonpath([os.path.normcase(real), base]) == base
     except ValueError:  # Windows에서 드라이브가 다른 경우(C: vs D:)
         inside = False
+    if not inside:
+        # macOS(기본 APFS)는 대소문자를 구분하지 않지만 normcase·realpath가 대소문자를
+        # 맞춰 주지 않는다. 그래서 '../PUBLIC/report.txt'처럼 공개 폴더 이름의 대소문자만
+        # 바꾼 정상 요청이 문자열로는 public 밖으로 보인다 (13주차 C1).
+        # 실제 경로의 상위 폴더 중 public과 '물리적으로 같은 폴더'가 있으면 안쪽으로 본다.
+        inside = _under_public(real)
     return inside, real
+
+
+def _under_public(real):
+    """real 또는 그 상위 폴더가 public과 같은 폴더(같은 장치·inode)인지"""
+    p = real
+    while True:
+        try:
+            if os.path.samefile(p, PUBLIC_REAL):
+                return True
+        except OSError:  # 없는 경로는 건너뛰고 상위로
+            pass
+        parent = os.path.dirname(p)
+        if parent == p:
+            return False
+        p = parent
 
 
 class PatchedHandler(DownloadHandler):
