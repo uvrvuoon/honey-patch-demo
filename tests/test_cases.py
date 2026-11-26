@@ -367,11 +367,12 @@ def save_results(rows, failed, timing, path_md, path_json):
             md.append("| %s %s | %d | %s | %s | %s | %s | %s |"
                       % (r["mark"], r["name"], r["n"], r["avg_ms"], r["median_ms"],
                          r["min_ms"], r["max_ms"], ", ".join(r["responses"])))
-    path_md.write_text("\n".join(md) + "\n", encoding="utf-8")
+    # newline="\n": Windows에서 쓰면 줄바꿈이 CRLF가 되어 git이 매번 변경으로 보므로 LF로 고정
+    path_md.write_text("\n".join(md) + "\n", encoding="utf-8", newline="\n")
     path_json.write_text(json.dumps(
         {"time": time.strftime("%Y-%m-%d %H:%M:%S"), "failed": failed,
          "total": len(CASES) * 3, "cases": rows, "timing": timing},
-        ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 # ---- 실행 ------------------------------------------------------------------

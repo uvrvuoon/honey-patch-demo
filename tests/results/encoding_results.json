@@ -1,0 +1,756 @@
+{
+  "time": "2026-11-26 20:31:15",
+  "platform": "win32",
+  "python": "3.14.5",
+  "commit": "63713b0",
+  "backslash_is_sep": true,
+  "case_insensitive": true,
+  "failed": 1,
+  "total": 30,
+  "expect": {
+    "E1": {
+      "1": {
+        "status": 200,
+        "verdict": "leak",
+        "secret_hits": 3
+      },
+      "2": {
+        "status": 403,
+        "verdict": "blocked",
+        "secret_hits": 0
+      },
+      "3": {
+        "status": 200,
+        "verdict": "fake",
+        "secret_hits": 0,
+        "decoy": true
+      }
+    },
+    "E2": {
+      "1": {
+        "status": 200,
+        "verdict": "leak",
+        "secret_hits": 3
+      },
+      "2": {
+        "status": 403,
+        "verdict": "blocked",
+        "secret_hits": 0
+      },
+      "3": {
+        "status": 200,
+        "verdict": "fake",
+        "secret_hits": 0,
+        "decoy": true
+      }
+    },
+    "E10": {
+      "1": {
+        "status": 200,
+        "verdict": "leak",
+        "secret_hits": 3
+      },
+      "2": {
+        "status": 403,
+        "verdict": "blocked",
+        "secret_hits": 0
+      },
+      "3": {
+        "status": 200,
+        "verdict": "fake",
+        "secret_hits": 0,
+        "decoy": true
+      }
+    },
+    "E3": {
+      "1": {
+        "status": 404,
+        "verdict": "missing",
+        "secret_hits": 0
+      },
+      "2": {
+        "status": 404,
+        "verdict": "missing",
+        "secret_hits": 0
+      },
+      "3": {
+        "status": 404,
+        "verdict": "missing",
+        "secret_hits": 0,
+        "decoy": false
+      }
+    },
+    "E4": {
+      "1": {
+        "status": 200,
+        "verdict": "leak",
+        "secret_hits": 3
+      },
+      "2": {
+        "status": 403,
+        "verdict": "blocked",
+        "secret_hits": 0
+      },
+      "3": {
+        "status": 200,
+        "verdict": "fake",
+        "secret_hits": 0,
+        "decoy": true
+      }
+    },
+    "E5": {
+      "1": {
+        "status": 200,
+        "verdict": "leak",
+        "secret_hits": 3
+      },
+      "2": {
+        "status": 403,
+        "verdict": "blocked",
+        "secret_hits": 0
+      },
+      "3": {
+        "status": 200,
+        "verdict": "fake",
+        "secret_hits": 0,
+        "decoy": true
+      }
+    },
+    "E6": {
+      "1": {
+        "status": 400,
+        "verdict": "bad",
+        "secret_hits": 0
+      },
+      "2": {
+        "status": 400,
+        "verdict": "bad",
+        "secret_hits": 0
+      },
+      "3": {
+        "status": 400,
+        "verdict": "bad",
+        "secret_hits": 0,
+        "decoy": false
+      }
+    },
+    "E9": {
+      "1": {
+        "status": 400,
+        "verdict": "bad",
+        "secret_hits": 0
+      },
+      "2": {
+        "status": 400,
+        "verdict": "bad",
+        "secret_hits": 0
+      },
+      "3": {
+        "status": 400,
+        "verdict": "bad",
+        "secret_hits": 0,
+        "decoy": false
+      }
+    },
+    "E7": {
+      "1": {
+        "status": 404,
+        "verdict": "missing",
+        "secret_hits": 0
+      },
+      "2": {
+        "status": 404,
+        "verdict": "missing",
+        "secret_hits": 0
+      },
+      "3": {
+        "status": 404,
+        "verdict": "missing",
+        "secret_hits": 0,
+        "decoy": false
+      }
+    },
+    "E8": {
+      "1": {
+        "status": 200,
+        "verdict": "public",
+        "secret_hits": 0
+      },
+      "2": {
+        "status": 200,
+        "verdict": "public",
+        "secret_hits": 0
+      },
+      "3": {
+        "status": 200,
+        "verdict": "public",
+        "secret_hits": 0,
+        "decoy": false
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "E1",
+      "group": "경로 구분자",
+      "value": "..\\secret\\passwords.txt",
+      "send": "quote",
+      "who": "attacker",
+      "point": "Windows 경로 구분자 `\\`로 쓴 경로 이탈",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "sent": "..%5Csecret%5Cpasswords.txt",
+          "status": 200,
+          "ms": 14.3,
+          "verdict": "leak",
+          "label": "진짜 비밀 유출",
+          "matched": "secret/passwords.txt",
+          "secret_hits": 3,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "sent": "..%5Csecret%5Cpasswords.txt",
+          "status": 403,
+          "ms": 12.8,
+          "verdict": "blocked",
+          "label": "차단(403)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "sent": "..%5Csecret%5Cpasswords.txt",
+          "status": 200,
+          "ms": 13.8,
+          "verdict": "fake",
+          "label": "가짜 파일(미끼)",
+          "matched": "decoy/secret/passwords.txt",
+          "secret_hits": 0,
+          "decoy": true,
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "ip": "10.0.0.66"
+    },
+    {
+      "id": "E2",
+      "group": "URL 인코딩",
+      "value": "%2e%2e%2fsecret%2fpasswords.txt",
+      "send": "raw",
+      "who": "attacker",
+      "point": "`../`를 1회 인코딩 (서버가 한 번 해제하면 위반 사례와 같아짐)",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "sent": "%2e%2e%2fsecret%2fpasswords.txt",
+          "status": 200,
+          "ms": 16.6,
+          "verdict": "leak",
+          "label": "진짜 비밀 유출",
+          "matched": "secret/passwords.txt",
+          "secret_hits": 3,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "sent": "%2e%2e%2fsecret%2fpasswords.txt",
+          "status": 403,
+          "ms": 12.5,
+          "verdict": "blocked",
+          "label": "차단(403)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "sent": "%2e%2e%2fsecret%2fpasswords.txt",
+          "status": 200,
+          "ms": 16.0,
+          "verdict": "fake",
+          "label": "가짜 파일(미끼)",
+          "matched": "decoy/secret/passwords.txt",
+          "secret_hits": 0,
+          "decoy": true,
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "ip": "10.0.0.66"
+    },
+    {
+      "id": "E3",
+      "group": "URL 인코딩",
+      "value": "%252e%252e%252fsecret%252fpasswords.txt",
+      "send": "raw",
+      "who": "attacker",
+      "point": "2중 인코딩 (한 번만 해제되므로 `%2e%2e%2f…` 라는 이름의 파일이 됨)",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "sent": "%252e%252e%252fsecret%252fpasswords.txt",
+          "status": 404,
+          "ms": 1.9,
+          "verdict": "missing",
+          "label": "파일 없음(404)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "sent": "%252e%252e%252fsecret%252fpasswords.txt",
+          "status": 404,
+          "ms": 11.3,
+          "verdict": "missing",
+          "label": "파일 없음(404)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "sent": "%252e%252e%252fsecret%252fpasswords.txt",
+          "status": 404,
+          "ms": 16.0,
+          "verdict": "missing",
+          "label": "파일 없음(404)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": true,
+          "pass": false,
+          "diffs": [
+            "decoy 기대 False / 실제 True"
+          ]
+        }
+      ],
+      "ip": "10.0.0.66"
+    },
+    {
+      "id": "E4",
+      "group": "대소문자",
+      "value": "../SECRET/PASSWORDS.TXT",
+      "send": "quote",
+      "who": "attacker",
+      "point": "같은 비밀 파일을 대문자로 지정",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "sent": "..%2FSECRET%2FPASSWORDS.TXT",
+          "status": 200,
+          "ms": 15.3,
+          "verdict": "leak",
+          "label": "진짜 비밀 유출",
+          "matched": "secret/passwords.txt",
+          "secret_hits": 3,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "sent": "..%2FSECRET%2FPASSWORDS.TXT",
+          "status": 403,
+          "ms": 12.6,
+          "verdict": "blocked",
+          "label": "차단(403)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "sent": "..%2FSECRET%2FPASSWORDS.TXT",
+          "status": 200,
+          "ms": 13.9,
+          "verdict": "fake",
+          "label": "가짜 파일(미끼)",
+          "matched": "decoy/secret/passwords.txt",
+          "secret_hits": 0,
+          "decoy": true,
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "ip": "10.0.0.66"
+    },
+    {
+      "id": "E5",
+      "group": "절대 경로",
+      "value": "C:\\Users\\ASUS\\SSS\\honey-patch-demo\\data\\secret\\passwords.txt",
+      "send": "quote",
+      "who": "attacker",
+      "point": "public 기준 상대 경로가 아니라 절대 경로로 지정",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "sent": "C%3A%5CUsers%5CASUS%5CSSS%5Choney-patch-demo%5Cdata%5Csecret%5Cpasswords.txt",
+          "status": 200,
+          "ms": 2.2,
+          "verdict": "leak",
+          "label": "진짜 비밀 유출",
+          "matched": "secret/passwords.txt",
+          "secret_hits": 3,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "sent": "C%3A%5CUsers%5CASUS%5CSSS%5Choney-patch-demo%5Cdata%5Csecret%5Cpasswords.txt",
+          "status": 403,
+          "ms": 1.8,
+          "verdict": "blocked",
+          "label": "차단(403)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "sent": "C%3A%5CUsers%5CASUS%5CSSS%5Choney-patch-demo%5Cdata%5Csecret%5Cpasswords.txt",
+          "status": 200,
+          "ms": 2.1,
+          "verdict": "fake",
+          "label": "가짜 파일(미끼)",
+          "matched": "decoy/secret/passwords.txt",
+          "secret_hits": 0,
+          "decoy": true,
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "ip": "10.0.0.66"
+    },
+    {
+      "id": "E6",
+      "group": "빈 값",
+      "value": "",
+      "send": "raw",
+      "who": "user",
+      "point": "file 값이 비어 있을 때",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "sent": "",
+          "status": 400,
+          "ms": 1.8,
+          "verdict": "bad",
+          "label": "잘못된 요청(400)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "sent": "",
+          "status": 400,
+          "ms": 16.7,
+          "verdict": "bad",
+          "label": "잘못된 요청(400)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "sent": "",
+          "status": 400,
+          "ms": 15.4,
+          "verdict": "bad",
+          "label": "잘못된 요청(400)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": false,
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "ip": "10.0.0.10"
+    },
+    {
+      "id": "E7",
+      "group": "경로 중간 ..",
+      "value": "public/../public/report.txt",
+      "send": "quote",
+      "who": "user",
+      "point": "`..`가 중간에 있지만 정규화하면 public 안 (없는 파일)",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "sent": "public%2F..%2Fpublic%2Freport.txt",
+          "status": 404,
+          "ms": 15.9,
+          "verdict": "missing",
+          "label": "파일 없음(404)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "sent": "public%2F..%2Fpublic%2Freport.txt",
+          "status": 404,
+          "ms": 14.1,
+          "verdict": "missing",
+          "label": "파일 없음(404)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "sent": "public%2F..%2Fpublic%2Freport.txt",
+          "status": 404,
+          "ms": 13.3,
+          "verdict": "missing",
+          "label": "파일 없음(404)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": false,
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "ip": "10.0.0.10"
+    },
+    {
+      "id": "E8",
+      "group": "경로 중간 ..",
+      "value": "../public/report.txt",
+      "send": "quote",
+      "who": "user",
+      "point": "`..`가 있어도 결국 public 안의 정상 파일 (오탐 확인)",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "sent": "..%2Fpublic%2Freport.txt",
+          "status": 200,
+          "ms": 11.4,
+          "verdict": "public",
+          "label": "공개 파일",
+          "matched": "public/report.txt",
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "sent": "..%2Fpublic%2Freport.txt",
+          "status": 200,
+          "ms": 11.8,
+          "verdict": "public",
+          "label": "공개 파일",
+          "matched": "public/report.txt",
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "sent": "..%2Fpublic%2Freport.txt",
+          "status": 200,
+          "ms": 1.9,
+          "verdict": "public",
+          "label": "공개 파일",
+          "matched": "public/report.txt",
+          "secret_hits": 0,
+          "decoy": false,
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "ip": "10.0.0.10"
+    },
+    {
+      "id": "E9",
+      "group": "널 바이트",
+      "value": "report.txt%00.png",
+      "send": "raw",
+      "who": "user",
+      "point": "널 바이트로 확장자 검사를 속이는 고전 수법",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "sent": "report.txt%00.png",
+          "status": 400,
+          "ms": 1.8,
+          "verdict": "bad",
+          "label": "잘못된 요청(400)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "sent": "report.txt%00.png",
+          "status": 400,
+          "ms": 11.8,
+          "verdict": "bad",
+          "label": "잘못된 요청(400)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "sent": "report.txt%00.png",
+          "status": 400,
+          "ms": 10.1,
+          "verdict": "bad",
+          "label": "잘못된 요청(400)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": false,
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "ip": "10.0.0.10"
+    },
+    {
+      "id": "E10",
+      "group": "URL 인코딩",
+      "value": "%2E%2E%2Fsecret%2Fpasswords.txt",
+      "send": "raw",
+      "who": "attacker",
+      "point": "인코딩의 16진수를 대문자로 (%2E vs %2e)",
+      "results": [
+        {
+          "id": 1,
+          "mark": "①",
+          "name": "무방비",
+          "sent": "%2E%2E%2Fsecret%2Fpasswords.txt",
+          "status": 200,
+          "ms": 11.9,
+          "verdict": "leak",
+          "label": "진짜 비밀 유출",
+          "matched": "secret/passwords.txt",
+          "secret_hits": 3,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 2,
+          "mark": "②",
+          "name": "일반 패치",
+          "sent": "%2E%2E%2Fsecret%2Fpasswords.txt",
+          "status": 403,
+          "ms": 12.8,
+          "verdict": "blocked",
+          "label": "차단(403)",
+          "matched": null,
+          "secret_hits": 0,
+          "decoy": null,
+          "pass": true,
+          "diffs": []
+        },
+        {
+          "id": 3,
+          "mark": "③",
+          "name": "허니패치",
+          "sent": "%2E%2E%2Fsecret%2Fpasswords.txt",
+          "status": 200,
+          "ms": 13.8,
+          "verdict": "fake",
+          "label": "가짜 파일(미끼)",
+          "matched": "decoy/secret/passwords.txt",
+          "secret_hits": 0,
+          "decoy": true,
+          "pass": true,
+          "diffs": []
+        }
+      ],
+      "ip": "10.0.0.66"
+    }
+  ]
+}
