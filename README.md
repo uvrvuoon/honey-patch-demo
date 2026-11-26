@@ -302,13 +302,20 @@ honey-patch-demo/
 
 경로를 해석하는 규칙이 OS마다 달라서, **같은 입력이 OS에 따라 다르게 판정됩니다.** 13주차 추가 사례(`tests/test_encoding_cases.py`)는 이 두 속성을 실행 시작 때 확인해 해당 환경의 기대값을 씁니다.
 
-| 입력 | Windows 11 (확인함) | Linux (확인함) | macOS (예상) |
-|---|---|---|---|
-| `..\secret\passwords.txt` | `\`가 경로 구분자 → ① 유출 / ② 403 / ③ 가짜 | `\`가 보통 글자 → **셋 다 404** | Linux와 같을 것 |
-| `../SECRET/PASSWORDS.TXT` | 대소문자 구분 안 함 → ① 유출 / ② 403 / ③ 가짜 | 구분함 → ① 404 / **② 403 / ③ 404** | Windows와 같을 것 (기본 APFS는 구분 안 함) |
+판정을 가르는 환경 속성은 두 가지입니다. **세 OS에서 모두 실행해 확인했습니다.**
 
-- 확인 결과: `tests/results/encoding_results_fresh.md`(Windows 11, Python 3.14), `tests/results/encoding_results_fresh_linux.md`(WSL Ubuntu 22.04, Python 3.10)
-- 두 환경 모두 **기대와 30/30 일치**합니다. 스크립트가 환경 속성을 먼저 확인해 그 환경의 기대값을 쓰기 때문입니다.
+| 환경 속성 | Windows 11 | macOS | Linux |
+|---|---|---|---|
+| `\`가 경로 구분자인가 | 예 | 아니요 | 아니요 |
+| 파일 이름 대소문자를 구분하나 | 아니요 | 아니요 (기본 APFS) | 예 |
+
+| 입력 | Windows 11 (확인함) | macOS (확인함) | Linux (확인함) |
+|---|---|---|---|
+| `..\secret\passwords.txt` | ① 200 유출 / ② 403 / ③ 200 가짜 | **셋 다 404** | **셋 다 404** |
+| `../SECRET/PASSWORDS.TXT` | ① 200 유출 / ② 403 / ③ 200 가짜 | ① 200 유출 / ② 403 / ③ 200 가짜 | ① 404 / **② 403 / ③ 404** |
+
+- 확인 결과: `encoding_results_fresh.md`(Windows 11, Python 3.14), `encoding_results_fresh_macos.md`(macOS, Python 3.15), `encoding_results_fresh_linux.md`(WSL Ubuntu 22.04, Python 3.10) — 모두 `tests/results/` 아래
+- 세 환경 모두 **기대와 30/30 일치**합니다. 스크립트가 환경 속성을 먼저 확인해 그 환경의 기대값을 쓰기 때문입니다.
 - 어느 OS에서도 진짜 비밀이 ②③으로 새지는 않지만, **응답 코드가 달라져 재현 결과가 환경마다 다르게 보입니다.** OS별 경로 규칙 차이를 다루지 않기로 한 범위(명세상 미지원)로 기록합니다.
 - Linux의 `../SECRET/PASSWORDS.TXT`에서는 ②가 403, ③이 404로 **갈립니다.** 대문자 이름에 맞는 가짜 파일이 미끼 폴더에 없기 때문이며, 8절의 "미끼 파일이 없는 경로"와 같은 문제입니다.
 
