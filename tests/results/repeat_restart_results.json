@@ -1,0 +1,506 @@
+{
+  "time": "2026-11-26 19:37:41",
+  "command": "python tests/test_repeat_restart_cases.py --repeat 20 --burst 30",
+  "python": "3.14.3",
+  "os": "win32",
+  "scenarios": [
+    {
+      "id": "R1",
+      "group": "반복",
+      "title": "같은 공격을 순서대로 반복해도 응답이 매번 같고 로그가 반복 수만큼 쌓이는지",
+      "steps": [
+        {
+          "desc": "같은 공격 20회 순서대로",
+          "server": "①",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "status": 200,
+            "verdict": "leak",
+            "secret_hits": 3,
+            "body_kinds": 1
+          },
+          "got": {
+            "status": 200,
+            "verdict": "leak",
+            "secret_hits": 3,
+            "body_kinds": 1
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "같은 공격 20회 순서대로",
+          "server": "②",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "status": 403,
+            "verdict": "blocked",
+            "secret_hits": 0,
+            "body_kinds": 1
+          },
+          "got": {
+            "status": 403,
+            "verdict": "blocked",
+            "secret_hits": 0,
+            "body_kinds": 1
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "같은 공격 20회 순서대로",
+          "server": "③",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "status": 200,
+            "verdict": "fake",
+            "secret_hits": 0,
+            "body_kinds": 1,
+            "attack_lines": 20,
+            "other_lines": 0
+          },
+          "got": {
+            "status": 200,
+            "verdict": "fake",
+            "secret_hits": 0,
+            "body_kinds": 1,
+            "attack_lines": 20,
+            "other_lines": 0
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "R2",
+      "group": "반복",
+      "title": "같은 공격을 동시에 보내도 모두 가짜이고 로그 줄이 깨지지 않는지",
+      "steps": [
+        {
+          "desc": "같은 공격 30건 동시 전송",
+          "server": "③",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "fake": 30,
+            "secret_hits": 0,
+            "log_lines": 30,
+            "broken_lines": 0
+          },
+          "got": {
+            "fake": 30,
+            "secret_hits": 0,
+            "log_lines": 30,
+            "broken_lines": 0
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "R3",
+      "group": "반복",
+      "title": "공격 뒤 같은 IP의 정상 요청을 반복해도 매번 sticky인지",
+      "steps": [
+        {
+          "desc": "공격 1회",
+          "server": "③",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "verdict": "fake",
+            "event": "attack"
+          },
+          "got": {
+            "verdict": "fake",
+            "event": "attack"
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "같은 IP가 report.txt 20회",
+          "server": "③",
+          "file": "report.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "verdict": "public",
+            "sticky_lines": 20,
+            "secret_hits": 0
+          },
+          "got": {
+            "verdict": "public",
+            "sticky_lines": 20,
+            "secret_hits": 0
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "M1",
+      "group": "미끼 없음",
+      "title": "실제로 있는 data 밖 파일(servers/common.py) 공격",
+      "steps": [
+        {
+          "desc": "소스 코드 파일 공격",
+          "server": "①",
+          "file": "../../servers/common.py",
+          "xff": "10.0.0.66",
+          "expect": {
+            "status": 200,
+            "same_as_real_file": true
+          },
+          "got": {
+            "status": 200,
+            "same_as_real_file": true
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "소스 코드 파일 공격",
+          "server": "②",
+          "file": "../../servers/common.py",
+          "xff": "10.0.0.66",
+          "expect": {
+            "status": 403
+          },
+          "got": {
+            "status": 403
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "소스 코드 파일 공격",
+          "server": "③",
+          "file": "../../servers/common.py",
+          "xff": "10.0.0.66",
+          "expect": {
+            "status": 404,
+            "event": "attack",
+            "log_ip": "10.0.0.66",
+            "real_content_leaked": false,
+            "secret_hits": 0
+          },
+          "got": {
+            "status": 404,
+            "event": "attack",
+            "log_ip": "10.0.0.66",
+            "real_content_leaked": false,
+            "secret_hits": 0
+          },
+          "pass": true,
+          "diffs": [],
+          "note": "명세상 404가 맞지만, 무방비 서버(①)라면 200이 나왔을 파일이라 공격자가 ③을 '무방비 서버가 아님'으로 구분할 수 있음"
+        },
+        {
+          "desc": "위 공격 직후 같은 IP가 report.txt",
+          "server": "③",
+          "file": "report.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "verdict": "public",
+            "event": "sticky"
+          },
+          "got": {
+            "verdict": "public",
+            "event": "sticky"
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "M2",
+      "group": "미끼 없음",
+      "title": "운영체제 기본 파일(C:\\Windows\\win.ini) 공격",
+      "steps": [
+        {
+          "desc": "OS 파일 공격",
+          "server": "①",
+          "file": "../../../../../../../../../../../../../../../Windows/win.ini",
+          "xff": "10.0.0.66",
+          "expect": {
+            "status": 200,
+            "same_as_real_file": true
+          },
+          "got": {
+            "status": 200,
+            "same_as_real_file": true
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "OS 파일 공격",
+          "server": "②",
+          "file": "../../../../../../../../../../../../../../../Windows/win.ini",
+          "xff": "10.0.0.66",
+          "expect": {
+            "status": 403
+          },
+          "got": {
+            "status": 403
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "OS 파일 공격",
+          "server": "③",
+          "file": "../../../../../../../../../../../../../../../Windows/win.ini",
+          "xff": "10.0.0.66",
+          "expect": {
+            "status": 404,
+            "event": "attack",
+            "log_ip": "10.0.0.66",
+            "real_content_leaked": false,
+            "secret_hits": 0
+          },
+          "got": {
+            "status": 404,
+            "event": "attack",
+            "log_ip": "10.0.0.66",
+            "real_content_leaked": false,
+            "secret_hits": 0
+          },
+          "pass": true,
+          "diffs": [],
+          "note": "명세상 404가 맞지만, 무방비 서버(①)라면 200이 나왔을 파일이라 공격자가 ③을 '무방비 서버가 아님'으로 구분할 수 있음"
+        },
+        {
+          "desc": "위 공격 직후 같은 IP가 report.txt",
+          "server": "③",
+          "file": "report.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "verdict": "public",
+            "event": "sticky"
+          },
+          "got": {
+            "verdict": "public",
+            "event": "sticky"
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "M3",
+      "group": "미끼 없음",
+      "title": "어디에도 없는 파일(../secret/none.txt) 공격",
+      "steps": [
+        {
+          "desc": "없는 파일 공격",
+          "server": "①",
+          "file": "../secret/none.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "status": 404,
+            "same_as_real_file": false
+          },
+          "got": {
+            "status": 404,
+            "same_as_real_file": false
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "없는 파일 공격",
+          "server": "②",
+          "file": "../secret/none.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "status": 403
+          },
+          "got": {
+            "status": 403
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "없는 파일 공격",
+          "server": "③",
+          "file": "../secret/none.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "status": 404,
+            "event": "attack",
+            "log_ip": "10.0.0.66",
+            "real_content_leaked": false,
+            "secret_hits": 0
+          },
+          "got": {
+            "status": 404,
+            "event": "attack",
+            "log_ip": "10.0.0.66",
+            "real_content_leaked": false,
+            "secret_hits": 0
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "위 공격 직후 같은 IP가 report.txt",
+          "server": "③",
+          "file": "report.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "verdict": "public",
+            "event": "sticky"
+          },
+          "got": {
+            "verdict": "public",
+            "event": "sticky"
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "RS",
+      "group": "재시작",
+      "title": "서버 ③ 재시작 전·후 공격자 기억과 로그 파일 상태",
+      "steps": [
+        {
+          "desc": "재시작 전: 공격",
+          "server": "③",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "verdict": "fake",
+            "event": "attack"
+          },
+          "got": {
+            "verdict": "fake",
+            "event": "attack"
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "재시작 전: 같은 IP report.txt",
+          "server": "③",
+          "file": "report.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "verdict": "public",
+            "event": "sticky"
+          },
+          "got": {
+            "verdict": "public",
+            "event": "sticky"
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "재시작 직후: 로그 파일",
+          "server": "③",
+          "file": "-",
+          "xff": "-",
+          "expect": {
+            "log_lines_kept": true
+          },
+          "got": {
+            "log_lines_kept": true
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "재시작 후: 같은 IP report.txt",
+          "server": "③",
+          "file": "report.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "verdict": "public",
+            "event": null
+          },
+          "got": {
+            "verdict": "public",
+            "event": null
+          },
+          "pass": true,
+          "diffs": [],
+          "note": "공격자 기억이 메모리에만 있어 재시작하면 sticky가 풀림 (README 8절)"
+        },
+        {
+          "desc": "재시작 후: 같은 IP 다시 공격",
+          "server": "③",
+          "file": "../secret/passwords.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "verdict": "fake",
+            "event": "attack",
+            "secret_hits": 0
+          },
+          "got": {
+            "verdict": "fake",
+            "event": "attack",
+            "secret_hits": 0
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        },
+        {
+          "desc": "재시작 후 재공격 뒤: 같은 IP report.txt",
+          "server": "③",
+          "file": "report.txt",
+          "xff": "10.0.0.66",
+          "expect": {
+            "verdict": "public",
+            "event": "sticky"
+          },
+          "got": {
+            "verdict": "public",
+            "event": "sticky"
+          },
+          "pass": true,
+          "diffs": [],
+          "note": ""
+        }
+      ],
+      "pass": true
+    }
+  ]
+}
