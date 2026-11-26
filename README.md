@@ -19,8 +19,8 @@
 | 항목 | 내용 |
 |---|---|
 | Python | 3.7 이상 |
-| 추가 패키지 | 필요 없음 (서버 ①②③, 비교 화면 모두 Python 표준 라이브러리만 사용) |
-| OS | |
+| 추가 패키지 | 필요 없음 (서버 ①②③, 비교 화면, 검증 스크립트 모두 Python 표준 라이브러리만 사용) |
+| OS | Windows 11·macOS에서 실행 확인 (Linux는 일부만 확인). 일부 입력은 OS에 따라 결과가 다릅니다 — 6절 맨 아래 참고 |
 | 브라우저 | 아무 브라우저 (Chrome, Edge, Safari 등) |
 
 
@@ -69,9 +69,11 @@ http://127.0.0.1:8000 에 접속합니다.
 
 ---
 
-## 3. 고정 검증 사례 3종 실행
+## 3. 검증 사례와 실험 실행
 
 같은 입력을 서버 ①②③에 똑같이 보내 보호 적용 전(①) → 일반 패치(②) → 허니패치(③) 의 결과를 비교하는 것이 목적입니다.
+
+3-1 ~ 3-5는 11주차에 정한 **고정 사례 3종**, 3-6은 13주차에 더한 **추가 사례**, 3-7은 14주차 **실험**입니다.
 
 | 사례 | 입력 | 확인하는 것 | 이 입력을 고른 이유 |
 |---|---|---|---|
@@ -152,6 +154,40 @@ python3 tests/test_cases.py
 - 기대값은 코드 안 `CASES`에 고정해 두었습니다. 결과가 다르면 기대값이 아니라 구현이나 원인을 확인합니다 (11주차 고정 규칙).
 - `--use-running`으로 돌릴 때는 서버 ③을 다시 켜고 실행하세요. 앞선 시연에서 기억된 공격자 IP가 남아 있으면 정상·경계 사례가 미끼로 갈 수 있습니다 (4절 초기화).
 
+### 3-6. 13주차 추가 검증 사례
+
+고정 사례 3종(3-5)은 그대로 두고, 더 다양한 입력으로 시험한 스크립트입니다. 모두 서버를 미리 켤 필요가 없습니다. 실행 중 생긴 `logs/honeypatch.log`는 실행 전 상태로 되돌리고, `before_after.py`는 임시 폴더에서 돌려 저장소의 로그·코드를 아예 건드리지 않습니다.
+
+| 스크립트 | 무엇을 시험하나 | 결과 파일 |
+|---|---|---|
+| `python3 tests/test_xff_cases.py`<br>(안지민) | `X-Forwarded-For` 위조, 같은 IP 동시 접속, 공격 직후 정상 요청 | `tests/results/xff_results*.md` |
+| `python3 tests/test_repeat_restart_cases.py`<br>(이수빈) | 같은 공격 반복, 미끼 없는 파일 공격, 서버 ③ 재시작 전·후 | `tests/results/repeat_restart_results.md` |
+| `python3 tests/test_encoding_cases.py`<br>(김진하) | 같은 공격을 다른 표기로: 경로 구분자 `..\`, URL 인코딩(1회·2중·대문자), 대소문자, 절대 경로, 빈 값, 널 바이트, 경로 중간 `..` | `tests/results/encoding_results.md` |
+| `python3 tests/timing_1_vs_3.py`<br>(이수빈) | 같은 공격에 대한 ①과 ③의 응답 시간 차 | `tests/results/timing_1_vs_3.md` |
+| `python3 tests/before_after.py`<br>(이수빈) | 고친 버그를 같은 입력으로 수정 전·후 재실행 | `tests/results/before_after.md` |
+
+추가 옵션:
+
+| 명령 | 뜻 |
+|---|---|
+| `python3 tests/test_xff_cases.py --public-decoy` | 임시 가짜 `report.txt`를 두고 실행해, 오탐이 응답 내용까지 바꾸는지 확인 |
+| `python3 tests/test_encoding_cases.py --fresh` | 사례마다 서버 ③을 새로 띄워 앞 사례의 영향(공격자 IP 기억)을 없앰 |
+| `python3 tests/before_after.py --with-fixed` | 끝에 고정 사례 3종도 다시 실행 |
+
+- `test_encoding_cases.py`는 실행 환경을 먼저 확인해(`\`가 경로 구분자인지, 파일 시스템이 대소문자를 구분하는지) 그 환경에 맞는 기대값 표를 씁니다. 같은 입력이 Windows와 macOS/Linux에서 다르게 판정되기 때문입니다 (6절 맨 아래).
+- 추가 사례의 기대값·결과·반례 분류는 `docs/13w_encoding_cases_jinha.md`와 각 결과 파일에 있습니다.
+
+### 3-7. 14주차 실험 (가짜 파일 수에 따른 응답 시간)
+
+```bash
+python3 tests/bench.py                      # 10/100/1000개 × 200회 × 3라운드
+python3 tests/make_decoys.py --count 100    # 가짜 파일만 따로 만들기 (--clean / --status)
+```
+
+- 계획(변수·지표·반복 횟수·측정 조건): `docs/experiment_plan.md`
+- 결과: `tests/results/bench.md`(표), `tests/results/bench.json`(원자료)
+- 끝나면 생성한 가짜 파일을 지우고 로그를 실행 전 상태로 되돌립니다.
+
 ---
 
 ## 4. 로그 확인과 초기화
@@ -207,11 +243,20 @@ honey-patch-demo/
 │       └── secret/
 │           └── passwords.txt  # 가짜 비밀 (Faker 생성, seed 2026)
 ├── tests/
-│   ├── smoke_servers_1_2.py   # 윤아란 — 서버 ①② 자동 테스트
-│   ├── test_cases.py          # 김진하 — 고정 사례 3종을 ①②③에 보내고 기대 결과와 대조
-│   └── results/               # test_cases.py 실행 결과 (results.md, results.json)
+│   ├── smoke_servers_1_2.py          # 윤아란 — 서버 ①② 자동 테스트
+│   ├── test_cases.py                 # 김진하 — 고정 사례 3종(11주차)을 ①②③에 보내고 기대 결과와 대조
+│   ├── test_xff_cases.py             # 안지민 — XFF 위조·같은 IP·공격 직후 (13주차 추가)
+│   ├── test_repeat_restart_cases.py  # 이수빈 — 반복 공격·미끼 없는 파일·재시작 (13주차 추가)
+│   ├── test_encoding_cases.py        # 김진하 — 표기 변형 입력 (13주차 추가)
+│   ├── timing_1_vs_3.py              # 이수빈 — ①③ 응답 시간 비교
+│   ├── before_after.py               # 이수빈 — 고친 버그의 수정 전·후 재실행
+│   ├── bench.py                      # 윤아란 — 가짜 파일 수에 따른 응답 시간 측정 (14주차 실험)
+│   ├── make_decoys.py                # 윤아란 — 가짜 파일 대량 생성·삭제
+│   └── results/                      # 위 스크립트들의 실행 결과 (.md 표 + .json 원자료)
 ├── docs/
-│   └── ai_usage_log.md        # AI 사용 기록 (취합: 이수빈)
+│   ├── ai_usage_log.md               # AI 사용 기록 (취합: 이수빈)
+│   ├── experiment_plan.md            # 윤아란 — 14주차 실험 계획
+│   └── 13w_encoding_cases_jinha.md   # 김진하 — 13주차 추가 사례·반례 분류 정리
 ├── logs/                      # 서버 ③ 실행 시 honeypatch.log 생성
 ├── requirements.txt
 └── README.md                  # 황은영
@@ -239,8 +284,9 @@ honey-patch-demo/
 - public 밖(공격): 403 대신 `data/decoy/` 아래 같은 상대 위치의 가짜 파일을 200으로 응답
   (예: `data/secret/passwords.txt` → `data/decoy/secret/passwords.txt`). 가짜 파일이 없으면 404
 - 공격자 기억(sticky): 한 번 공격한 IP를 기억, 이후 요청도 같은 위치에 가짜 파일이 있으면 가짜로 응답 (없으면 실제 파일)
-- IP 판단: `X-Forwarded-For` 헤더의 첫 값 우선, 없으면 실제 접속 주소
+- IP 판단: `X-Forwarded-For` 헤더의 첫 값 우선, 헤더가 없거나 **첫 값이 비어 있으면** 실제 접속 주소
   - 비교 화면은 모든 요청을 같은 PC에서 보내므로, 이 헤더로 정상 사용자(10.0.0.10)와 공격자(10.0.0.66)를 구분
+  - 첫 값이 빈 경우(`X-Forwarded-For: ,`)에 빈 문자열을 IP로 쓰던 버그는 13주차에 수정했습니다 (반례 X4, `tests/results/before_after.md`)
 
 ### 상태 코드
 
@@ -251,7 +297,16 @@ honey-patch-demo/
 | 파일 없음 / 디렉터리 | 404 |
 | `file` 값 누락, 널 바이트 포함 | 400 |
 
-참고: Windows에서는 `\`도 경로 구분자라 `..\secret\passwords.txt`가 ②에서 403, Linux/macOS에서는 `\`가 일반 문자라 404.
+### OS에 따라 결과가 달라지는 입력
+
+경로를 해석하는 규칙이 OS마다 달라서, **같은 입력이 OS에 따라 다르게 판정됩니다.** 13주차 추가 사례(`tests/test_encoding_cases.py`)는 이 두 속성을 실행 시작 때 확인해 해당 환경의 기대값을 씁니다.
+
+| 입력 | Windows (확인함) | Linux (예상) | macOS (예상) |
+|---|---|---|---|
+| `..\secret\passwords.txt` | `\`가 경로 구분자 → ① 유출 / ② 403 / ③ 가짜 | `\`가 보통 글자 → 셋 다 404 | Linux와 같음 |
+| `../SECRET/PASSWORDS.TXT` | 대소문자 구분 안 함 → ① 유출 / ② 403 / ③ 가짜 | 구분함 → ① 404 / ② 403 / ③ 404 | Windows와 같음 |
+
+어느 OS에서도 진짜 비밀이 ②③으로 새지는 않지만, **응답 코드가 달라져 재현 결과가 환경마다 다르게 보입니다.** 이는 OS별 경로 규칙 차이를 다루지 않기로 한 범위(명세상 미지원)로 기록합니다.
 
 ---
 
@@ -277,6 +332,8 @@ honey-patch-demo/
 | 비밀 보호 | 미끼 컨테이너의 메모리 속 비밀 데이터까지 가짜로 교체 | 미리 만든 가짜 파일로만 대체 | 메모리 속 비밀은 다루지 않음 |
 | 공격자 구분 | 공격이 일어난 연결(세션) 단위 | IP 단위 (`X-Forwarded-For` 헤더) | 헤더 위조 가능 → 실제 환경에서는 신뢰 불가 |
 | 공격자 기억 | 미끼 컨테이너 안에서 계속 동작 | 서버 ③ 메모리에 IP 목록 저장 | 서버 재시작 시 초기화 |
+| 공격 시 응답 지연 | 메모리 치환·프로세스 복제 때문에 약 **0.25초** 느려짐 (논문 6.2절). 논문도 이를 탐지 단서로 인정 (7절) | 공격 요청이 ①보다 약 **1.6ms** 느림 (`tests/results/timing_1_vs_3.md`, 200회×3라운드 중앙값 차, 3라운드 모두 같은 방향). 원인은 미끼 전환 자체가 아니라 **요청마다 공격 로그를 파일에 한 줄 쓰는 비용**으로 보임 — 같은 서버 ③ 안에서도 로그를 쓰는 요청이 쓰지 않는 요청보다 모든 라운드에서 느림 (`tests/results/bench.md`) | 지연의 크기도 원인도 다름. 네트워크 지연에 묻힐 정도라 원격 공격자가 알아채기는 어려움 |
+| 미끼 파일이 없는 경로 | 프로세스를 통째로 복제하므로 "미끼가 없는 파일"이라는 상황 자체가 없음 | 대응 가짜 파일이 없으면 404 → 같은 요청에 ①은 200을 주므로 **응답이 갈림** (`tests/results/repeat_restart_results.md` M1) | 미끼 폴더에 없는 파일을 노리면 허니패치임을 눈치챌 수 있음 |
 
 ---
 
@@ -287,8 +344,10 @@ honey-patch-demo/
 | 서버 ①②③, 비교 화면 | 완료, 고정 사례 3종 기대 결과와 일치 |
 | 서버 ①② 자동 테스트 | 완료 (`tests/smoke_servers_1_2.py`, 8/8) |
 | 서버 ③ 포함 고정 사례 자동 실행 | 완료 (김진하, `tests/test_cases.py`, 9/9 통과) |
-| 실험 1: ①과 ③에 같은 공격 100번, 응답 모양·시간 비교 | 측정 수단 완료 (`tests/test_cases.py --repeat 100`), 결과 정리는 13~14주차 |
-| 실험 2: 가짜 파일 수(10/100/1000개)에 따른 응답 시간 | 13~14주차 예정. 현재 가짜 파일 1개뿐이라 가짜 파일 생성 스크립트 필요 |
+| 13주차 추가 검증 사례 | 완료 — XFF·동시 접속·상태 전이(안지민), 반복·미끼 없는 파일·재시작(이수빈), 표기 변형(김진하). 결과는 `tests/results/` |
+| 반례와 수정 | X4(빈 XFF 첫 값 → 빈 IP 기록)만 구현 버그로 수정 완료. 나머지는 명세상 미지원·원논문 한계로 기록 (`tests/results/before_after.md`) |
+| 실험 1: ①과 ③에 같은 공격, 응답 모양·시간 비교 | 완료 (이수빈, `tests/timing_1_vs_3.py`, 200회×3라운드). **3라운드 모두 ③이 느림**, 중앙값 차 1.591ms. 원인은 미끼 전환이 아니라 공격 로그 쓰기로 보임 (같은 서버 ③에서도 로그를 쓰는 요청이 모든 라운드에서 더 느림, `tests/results/bench.md`) |
+| 실험 2: 가짜 파일 수(10/100/1000개)에 따른 응답 시간 | 계획·스크립트·예비 측정 완료 (윤아란, `docs/experiment_plan.md`, `tests/bench.py`). 예비 결과는 조건 간 차이가 라운드 간 흔들림보다 작아 "차이 없음". **본 측정은 14주차에 최신 커밋으로 다시 실행** |
 | Windows 재현 확인 | 예정 (팀원 PC에서 README 안내대로 재실행) |
 
 ---
