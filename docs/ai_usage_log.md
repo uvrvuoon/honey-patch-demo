@@ -44,9 +44,9 @@ AI를 쓸 때마다 **본인 이름 절 아래에** 한 건씩 추가해 주세�
 | 요청 내용 | 진하 결과(넘길 구현 버그 없음)를 받은 뒤 "고칠 게 정말 없는지 확인하고 수정까지 해 줘"라고 요청 |
 | AI가 작성한 것 | 코드 검토로 버그 후보 발견: `check_path()`가 `os.path.normcase`로 대소문자를 맞추는데, 이 함수는 macOS에서 아무것도 하지 않아 `../PUBLIC/report.txt`(정상 파일)를 public 밖으로 판정할 것으로 추정. Linux에서 bind mount로 macOS와 같은 조건(대문자 폴더가 실제로는 public과 같은 폴더)을 만들어 재현: 수정 전 ① 200 / ② 403 / ③ 404 + attack 기록, 이후 같은 사용자의 정상 요청이 sticky. `servers/patched_server.py`에 `_under_public()`(상위 폴더가 public과 `samefile`인지) 추가. `tests/before_after.py`에 C1-②·C1-③ 등록(macOS가 아니면 자동으로 건너뜀). README 6·9절 반영 |
 | AI 환경에서 확인된 것 | 같은 조건에서 수정 후 ①②③ 모두 200 공개, attack 기록 없음. 진짜 공격 `../secret/passwords.txt`는 그대로 ② 403 / ③ 가짜. 수정 후 고정 사례 9/9, 진하 `--fresh` 30/30, 수빈 7/7, 지민 사례 변화 없음. before_after 비교도 같은 조건에서 수정 전 재현·수정 후 명세대로. 응답 시간 영향: ③−① 0.118 → 0.134ms(Linux) |
-| 직접 확인한 것 | (내 PC에서 작성) Windows에서 고정 사례·before_after 재실행(C1은 Windows에서 건너뜀이 맞는지) / Mac 팀원에게 `python3 tests/before_after.py --bug C1-② --bug C1-③` 실행 부탁, 결과 확인 |
+| 직접 확인한 것 | Windows 내 PC에서 고정 사례·before_after 재실행(X4 재현·수정 확인, C1은 Windows라 건너뜀). 황은영 MacBook Air(실제 macOS)에서 C1 수정 전·후 실행: C1-② 수정 전 403 → 후 200, C1-③ 수정 전 404 + attack, 다음 정상 요청 sticky → 후 200 공개·기록 없음. Linux 흉내 결과와 일치 |
 | 채택·수정한 부분 | 기존 문자열 비교는 그대로 두고, 밖으로 판정된 경우에만 실제 폴더 비교를 추가(정상 요청 속도와 Windows·Linux 판정은 바뀌지 않게). 분류는 구현 버그: 코드 주석의 의도("대소문자를 구분하지 않으므로 normcase로 맞춤")가 macOS에서 지켜지지 않고, "정상 사용자는 오탐되면 안 된다"에 어긋남 |
-| 막힌 점 | Mac이 없어 실제 macOS에서는 아직 미확인(커널이 FAT·대소문자 무시 ext4를 지원하지 않아 bind mount로 대신 재현). 이 버그는 진하의 E4(`../SECRET/...`, 공격 방향)와 반대 방향이라 기존 사례로는 드러나지 않았음 |
+| 막힌 점 | 내 PC·AI 환경 모두 Mac이 아니어서 처음엔 Linux에서 bind mount로 같은 조건을 만들어 재현(커널이 FAT·대소문자 무시 ext4 미지원) → 은영 Mac에서 실제 확인. 은영이 `--bug`로 일부만 실행하자 Windows 결과 파일(before_after.md)을 덮어써서, `--label` 옵션을 추가해 OS별 결과 파일을 분리. 이 버그는 진하의 E4(`../SECRET/...`, 공격 방향)와 반대 방향이라 기존 사례로는 드러나지 않았음 |
 
 ---
 

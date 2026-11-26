@@ -319,7 +319,7 @@ honey-patch-demo/
 - 확인 결과: `encoding_results_fresh.md`(Windows 11, Python 3.14), `encoding_results_fresh_macos.md`(macOS, Python 3.15), `encoding_results_fresh_linux.md`(WSL Ubuntu 22.04, Python 3.10) — 모두 `tests/results/` 아래
 - 세 환경 모두 **기대와 30/30 일치**합니다. 스크립트가 환경 속성을 먼저 확인해 그 환경의 기대값을 쓰기 때문입니다.
 - 어느 OS에서도 진짜 비밀이 ②③으로 새지는 않지만, **응답 코드가 달라져 재현 결과가 환경마다 다르게 보입니다.** OS별 경로 규칙 차이를 다루지 않기로 한 범위(명세상 미지원)로 기록합니다.
-- C1의 macOS 칸은 Linux에서 macOS와 같은 조건(대문자 폴더가 실제로는 public과 같은 폴더)을 만들어 확인한 결과입니다. 실제 macOS에서는 `python3 tests/before_after.py --bug C1-② --bug C1-③`로 수정 전·후를 확인합니다 (macOS가 아니면 자동으로 건너뜀).
+- C1의 macOS 칸은 **실제 macOS에서 확인했습니다** (황은영 MacBook Air, `python3 tests/before_after.py --with-fixed --label macos` → `tests/results/before_after_macos.md`). macOS가 아닌 환경에서는 C1 비교가 자동으로 건너뛰어집니다 (`before_after.md`는 Windows 실행분).
 - Linux의 `../SECRET/PASSWORDS.TXT`에서는 ②가 403, ③이 404로 **갈립니다.** 대문자 이름에 맞는 가짜 파일이 미끼 폴더에 없기 때문이며, 8절의 "미끼 파일이 없는 경로"와 같은 문제입니다.
 
 ---

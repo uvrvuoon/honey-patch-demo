@@ -4,6 +4,7 @@
     python tests/before_after.py                    # 등록된 버그 전부 (BUGS)
     python tests/before_after.py --bug X4           # 하나만
     python tests/before_after.py --with-fixed       # 끝에 고정 사례 3종(test_cases.py)도 다시 실행
+    python tests/before_after.py --with-fixed --label macos   # 결과를 before_after_macos.md 로 따로 저장
 
 하는 일
   1. 버그마다 '수정 전 커밋'의 servers/·data/ 를 임시 폴더에 꺼낸다 (git archive).
@@ -206,6 +207,7 @@ def main():
     p = argparse.ArgumentParser(description="수정된 버그를 같은 입력으로 수정 전·후 비교")
     p.add_argument("--bug", action="append", help="버그 번호만 골라 실행 (여러 번 가능)")
     p.add_argument("--with-fixed", action="store_true", help="고정 사례 3종(test_cases.py)도 다시 실행")
+    p.add_argument("--label", help="결과 파일 이름 뒤에 붙일 이름 (예: macos -> before_after_macos.md)")
     p.add_argument("--no-save", action="store_true")
     a = p.parse_args()
 
@@ -263,15 +265,17 @@ def main():
         all_ok &= out.returncode == 0
 
     if not a.no_save:
-        save(report, fixed_cases)
+        save(report, fixed_cases, a)
     return 0 if all_ok else 1
 
 
-def save(report, fixed_cases):
+def save(report, fixed_cases, a):
     RESULT_DIR.mkdir(parents=True, exist_ok=True)
     md = ["# 수정된 버그 — 같은 입력으로 수정 전·후 재실행 (이수빈)", "",
           "- 실행 시각: %s" % time.strftime("%Y-%m-%d %H:%M:%S"),
-          "- 실행 명령: `python tests/before_after.py%s`" % (" --with-fixed" if fixed_cases else ""),
+          "- 실행 명령: `python tests/before_after.py%s%s%s`" % (
+              "".join(" --bug %s" % b for b in (a.bug or [])),
+              " --with-fixed" if fixed_cases else "", " --label %s" % a.label if a.label else ""),
           "- Python: %s / OS: %s" % (sys.version.split()[0], sys.platform)]
     if fixed_cases:
         md.append("- 고정 사례 3종 (수정 후 코드): %s" % fixed_cases)
@@ -293,11 +297,12 @@ def save(report, fixed_cases):
                 fmt(s["expect"], keys),
                 fmt(s["before"], keys), "" if s["before_ok"] else " ✗",
                 fmt(s["after"], keys), "" if s["after_ok"] else " ✗"))
-    (RESULT_DIR / "before_after.md").write_text("\n".join(md) + "\n", encoding="utf-8")
-    (RESULT_DIR / "before_after.json").write_text(json.dumps(
+    name = "before_after" + ("_" + a.label if a.label else "")
+    (RESULT_DIR / (name + ".md")).write_text("\n".join(md) + "\n", encoding="utf-8")
+    (RESULT_DIR / (name + ".json")).write_text(json.dumps(
         {"time": time.strftime("%Y-%m-%d %H:%M:%S"), "fixed_cases": fixed_cases, "bugs": report},
         ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print("결과 저장: tests/results/before_after.md, .json")
+    print("결과 저장: tests/results/%s.md, .json" % name)
 
 
 if __name__ == "__main__":
