@@ -172,6 +172,7 @@ python3 tests/test_cases.py
 |---|---|
 | `python3 tests/test_xff_cases.py --public-decoy` | 임시 가짜 `report.txt`를 두고 실행해, 오탐이 응답 내용까지 바꾸는지 확인 |
 | `python3 tests/test_encoding_cases.py --fresh` | 사례마다 서버 ③을 새로 띄워 앞 사례의 영향(공격자 IP 기억)을 없앰 |
+| `python3 tests/test_encoding_cases.py --fresh --label macos` | 결과 파일 이름 뒤에 말을 붙여 저장 (다른 OS 결과가 서로 덮어쓰지 않게) |
 | `python3 tests/before_after.py --with-fixed` | 끝에 고정 사례 3종도 다시 실행 |
 
 - `test_encoding_cases.py`는 실행 환경을 먼저 확인해(`\`가 경로 구분자인지, 파일 시스템이 대소문자를 구분하는지) 그 환경에 맞는 기대값 표를 씁니다. 같은 입력이 Windows와 macOS/Linux에서 다르게 판정되기 때문입니다 (6절 맨 아래).

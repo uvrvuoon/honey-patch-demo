@@ -345,6 +345,9 @@ def main():
     p.add_argument("--s1", type=int, default=8001)
     p.add_argument("--s2", type=int, default=8002)
     p.add_argument("--s3", type=int, default=8003)
+    p.add_argument("--label", default="", metavar="이름",
+                   help="결과 파일 이름 뒤에 붙일 말 (예: --label macos -> encoding_results_fresh_macos.md). "
+                        "다른 OS에서 돌린 결과가 서로 덮어쓰지 않게 하려고 사용")
     p.add_argument("--no-save", action="store_true", help="결과 파일을 쓰지 않음")
     a = p.parse_args()
 
@@ -403,6 +406,8 @@ def main():
 
     if not a.no_save:
         stem = "encoding_results_fresh" if a.fresh else "encoding_results"
+        if a.label:
+            stem += "_" + "".join(c for c in a.label if c.isalnum() or c in "-_")
         md, js = RESULT_DIR / (stem + ".md"), RESULT_DIR / (stem + ".json")
         save(rows, failed, md, js, a.fresh)
         print("결과 저장: %s , %s" % (md.relative_to(ROOT), js.relative_to(ROOT)))
